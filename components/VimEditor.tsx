@@ -174,12 +174,11 @@ const VimEditor: React.FC<VimEditorProps> = ({
   };
 
   return (
-    <div 
-      className="relative w-full max-w-3xl mx-auto bg-black border-4 border-gray-700 rounded-lg overflow-hidden shadow-2xl shadow-purple-900/50"
+    <div
+      className="relative w-full h-full flex flex-col bg-black border-2 border-gray-700 rounded-lg overflow-hidden shadow-xl"
       onKeyDown={handleKeyDown}
       tabIndex={0}
       ref={containerRef}
-      style={{ minHeight: '400px' }}
     >
       {/* Title Bar */}
       <div className="bg-neutral-800 text-gray-400 px-4 py-1 text-xs flex justify-between font-mono">
@@ -188,7 +187,7 @@ const VimEditor: React.FC<VimEditorProps> = ({
       </div>
 
       {/* Editor Area */}
-      <div className="p-4 font-mono text-lg leading-relaxed text-vim-fg">
+      <div className="flex-1 p-4 font-mono text-lg leading-relaxed text-vim-fg overflow-y-auto">
         {lines.map((line, rowIndex) => (
           <div key={rowIndex} className="flex relative">
             {/* Line Numbers */}
@@ -225,7 +224,7 @@ const VimEditor: React.FC<VimEditorProps> = ({
       </div>
 
       {/* Status Bar */}
-      <div className="absolute bottom-0 left-0 right-0 bg-vim-bar text-white px-2 py-1 font-mono text-sm flex justify-between border-t border-purple-500">
+      <div className="shrink-0 bg-vim-bar text-white px-3 py-1.5 font-mono text-sm flex justify-between border-t border-gray-700">
         <div className="flex gap-4">
           <span className={`font-bold ${mode === VimMode.NORMAL ? 'text-green-400' : 'text-blue-400'}`}>
             -- {mode} --

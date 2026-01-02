@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import VimEditor from './components/VimEditor';
-import Wizard from './components/Wizard';
+import LeftSidebar from './components/LeftSidebar';
 import ChatBot from './components/ChatBot';
 import PlayerHUD from './components/PlayerHUD';
+import TargetPreview from './components/TargetPreview';
 import AchievementToast from './components/AchievementToast';
 import { VimMode, GameState, Level, PlayerProfile, Achievement } from './types';
-import { TUTORIAL_LEVELS, ACHIEVEMENTS, RANKS } from './constants';
+import { TUTORIAL_LEVELS, ACHIEVEMENTS } from './constants';
 import { generateInfiniteLevel, generateWizardDialogue } from './services/geminiService';
 
 const DEFAULT_PROFILE: PlayerProfile = {
@@ -45,7 +46,7 @@ const App: React.FC = () => {
   // Load level logic
   const loadLevel = useCallback(async (index: number) => {
     setGameState(prev => ({ ...prev, isLoading: true, isLevelComplete: false, mode: VimMode.NORMAL }));
-    
+
     let level: Level;
 
     if (index < TUTORIAL_LEVELS.length) {
@@ -91,7 +92,7 @@ const App: React.FC = () => {
     if (!currentLevelData || gameState.isLoading || gameState.isLevelComplete) return;
 
     let isWin = false;
-    
+
     // Check if target is function or array
     if (typeof currentLevelData.targetText === 'function') {
       isWin = currentLevelData.targetText(gameState.buffer, gameState.cursor);
@@ -119,7 +120,7 @@ const App: React.FC = () => {
 
   const handleLevelComplete = async () => {
     setGameState(prev => ({ ...prev, isLevelComplete: true, score: prev.score + 100 }));
-    
+
     // Update Profile (XP & Achievements)
     setPlayerProfile(prev => {
       let newXP = prev.xp + 150; // Base XP
@@ -157,7 +158,7 @@ const App: React.FC = () => {
     // Generate reaction or use static
     if (currentLevelData) {
         setWizardMessage(currentLevelData.wizardSuccess);
-        
+
         // Optional: dynamic wizard flair
         if (gameState.currentLevelIndex >= TUTORIAL_LEVELS.length) {
              const dynamicFlair = await generateWizardDialogue("The student has completed a complex necromancy refactor.", "impressed");
@@ -182,86 +183,76 @@ const App: React.FC = () => {
     }
   };
 
-  if (!currentLevelData) return <div className="text-white text-center mt-20 font-mono">Summoning the Editor...</div>;
+  if (!currentLevelData) {
+    return (
+      <div className="h-screen bg-vim-bg flex items-center justify-center">
+        <div className="text-purple-400 font-mono animate-pulse">Summoning the Editor...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-vim-bg text-vim-fg p-4 flex flex-col items-center justify-center relative overflow-hidden">
-      
-      {/* Background Decor */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-5">
-         <div className="absolute top-10 left-10 text-9xl font-fantasy text-purple-900">VIM</div>
-         <div className="absolute bottom-10 right-10 text-9xl font-fantasy text-purple-900">ESC</div>
-      </div>
+    <div className="h-screen bg-vim-bg text-vim-fg flex flex-col overflow-hidden">
+      {/* Top Bar */}
+      <PlayerHUD profile={playerProfile} />
 
-      <div className="relative z-10 w-full max-w-4xl space-y-4">
-        
-        {/* Header */}
-        <header className="text-center mb-4">
-          <h1 className="text-4xl md:text-6xl font-fantasy text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 drop-shadow-lg">
-            Dark Magic of Vim
-          </h1>
-        </header>
+      {/* Main Three-Column Layout */}
+      <div className="flex-1 grid grid-cols-[260px_1fr_320px] min-h-0">
+        {/* Left Sidebar */}
+        <LeftSidebar
+          level={currentLevelData}
+          wizardMessage={wizardMessage}
+          isLevelComplete={gameState.isLevelComplete}
+        />
 
-        {/* Player HUD */}
-        <PlayerHUD profile={playerProfile} />
+        {/* Center: Editor + Target + Controls */}
+        <main className="flex flex-col p-4 gap-4 min-h-0 overflow-hidden">
+          {/* Vim Editor */}
+          <div className="flex-1 min-h-0">
+            <VimEditor
+              lines={gameState.buffer}
+              cursor={gameState.cursor}
+              mode={gameState.mode}
+              onBufferChange={(lines) => setGameState(prev => ({ ...prev, buffer: lines }))}
+              onCursorChange={(cursor) => setGameState(prev => ({ ...prev, cursor }))}
+              onModeChange={(mode) => setGameState(prev => ({ ...prev, mode }))}
+              allowedKeys={currentLevelData.allowedKeys}
+              isLevelComplete={gameState.isLevelComplete}
+            />
+          </div>
 
-        {/* Wizard */}
-        <Wizard message={wizardMessage} emotion={gameState.isLevelComplete ? 'happy' : 'neutral'} />
-
-        {/* Main Game Area */}
-        <div className="relative">
-           <VimEditor 
-            lines={gameState.buffer}
-            cursor={gameState.cursor}
-            mode={gameState.mode}
-            onBufferChange={(lines) => setGameState(prev => ({ ...prev, buffer: lines }))}
-            onCursorChange={(cursor) => setGameState(prev => ({ ...prev, cursor }))}
-            onModeChange={(mode) => setGameState(prev => ({ ...prev, mode }))}
-            allowedKeys={currentLevelData.allowedKeys}
-            isLevelComplete={gameState.isLevelComplete}
+          {/* Target Preview */}
+          <TargetPreview
+            targetText={currentLevelData.targetText}
+            currentBuffer={gameState.buffer}
+            isComplete={gameState.isLevelComplete}
           />
-          
-          {/* Objective Overlay (Helpful Hint) */}
-          {!gameState.isLevelComplete && (
-            <div className="mt-4 bg-black/50 p-4 rounded border border-gray-700 font-mono text-sm text-gray-300 flex justify-between items-center">
-               <div>
-                 <span className="text-purple-400 font-bold">OBJECTIVE:</span> {currentLevelData.description}
-               </div>
-               <div className="text-xs text-gray-500">Level {currentLevelData.id}</div>
-            </div>
-          )}
 
-          {/* Target Preview (For comparison levels) */}
-           {!gameState.isLevelComplete && Array.isArray(currentLevelData.targetText) && (
-              <div className="mt-2 text-xs text-gray-600 font-mono">
-                  <p>Target:</p>
-                  {currentLevelData.targetText.map((l, i) => <div key={i}>{l}</div>)}
-              </div>
-           )}
-        </div>
-
-        {/* Controls / Actions */}
-        <div className="flex justify-center gap-4 mt-6">
-          <button 
-            onClick={resetLevel}
-            className="px-6 py-2 bg-gray-800 hover:bg-red-900 text-gray-300 rounded font-mono border border-gray-600 transition-colors"
-          >
-            Reset Scroll
-          </button>
-          
-          {gameState.isLevelComplete && (
-            <button 
-              onClick={nextLevel}
-              className="px-8 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded font-mono font-bold shadow-[0_0_15px_rgba(168,85,247,0.5)] animate-bounce"
+          {/* Controls */}
+          <div className="flex justify-center gap-3 shrink-0">
+            <button
+              onClick={resetLevel}
+              className="px-5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded font-mono text-sm border border-gray-600 transition-colors"
             >
-              Next Ritual →
+              Reset Level
             </button>
-          )}
-        </div>
 
+            {gameState.isLevelComplete && (
+              <button
+                onClick={nextLevel}
+                className="px-6 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded font-mono font-bold transition-colors shadow-lg"
+              >
+                Next Level
+              </button>
+            )}
+          </div>
+        </main>
+
+        {/* Right Sidebar: Chat */}
+        <ChatBot />
       </div>
 
-      <ChatBot />
+      {/* Achievement Toast */}
       <AchievementToast achievement={newAchievement} onClose={() => setNewAchievement(null)} />
     </div>
   );
