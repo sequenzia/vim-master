@@ -36,7 +36,10 @@ npm run build
 │   ├── VimEditor.tsx        # Main Vim simulator with cursor/mode handling
 │   ├── Wizard.tsx           # NPC wizard avatar and speech bubbles
 │   ├── ChatBot.tsx          # AI chat interface with Gemini
-│   ├── PlayerHUD.tsx        # XP, rank, achievements display
+│   ├── PlayerHUD.tsx        # Header bar with XP, rank, achievements
+│   ├── LeftSidebar.tsx      # Left panel: wizard avatar, level info, hints
+│   ├── TargetPreview.tsx    # Shows expected result with line comparison
+│   ├── CheatSheets.tsx      # Vim cheat sheet thumbnails + modal viewer
 │   └── AchievementToast.tsx # Achievement unlock notifications
 ├── services/
 │   └── geminiService.ts     # Gemini AI integration (chat, level gen)
@@ -53,6 +56,9 @@ npm run build
 |------|---------|
 | `App.tsx` | Central game state, level flow, achievement triggers |
 | `components/VimEditor.tsx` | Vim mode simulation, keypress handling |
+| `components/LeftSidebar.tsx` | UI layout: wizard avatar, level info, hints, cheat sheets |
+| `components/TargetPreview.tsx` | Visual diff showing expected vs current buffer |
+| `components/CheatSheets.tsx` | Vim reference images with fullscreen modal |
 | `services/geminiService.ts` | AI chat, dialogue generation, level generation |
 | `types.ts` | VimMode enum, Level/GameState/PlayerProfile interfaces |
 | `constants.ts` | TUTORIAL_LEVELS, ACHIEVEMENTS, RANKS data |
@@ -73,6 +79,12 @@ npm run build
 - Chat: System prompt for wizard roleplay personality
 - Level generation: JSON schema for structured level responses
 - Fallback responses if API fails
+
+### UI Layout
+- **Header** (PlayerHUD): Logo, rank badge, XP progress bar, achievement icons
+- **Left Sidebar** (LeftSidebar): Wizard avatar, level info, objective, hints, cheat sheets, wizard dialogue
+- **Main Area**: VimEditor (center) with TargetPreview showing expected result
+- **Right Panel**: ChatBot AI assistant (collapsible)
 
 ## Coding Conventions
 
@@ -115,3 +127,6 @@ Edit `VimEditor.tsx` → `handleKeyDown` function
 
 ### Modify AI wizard personality
 Edit `geminiService.ts` → `createWizardChat` system instruction
+
+### Add a new cheat sheet
+Edit `CheatSheets.tsx` → `CHEAT_SHEETS` array with id, title, url

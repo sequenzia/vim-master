@@ -31,7 +31,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ level, wizardMessage, isLevel
         </button>
         <div>
           <h2 className="font-fantasy text-purple-300 font-bold text-sm">Anthony</h2>
-          <p className="text-xs text-gray-500">Vim Master</p>
+          <p className="text-xs text-gray-500">The Grand Wizard of Vim</p>
         </div>
       </div>
 
