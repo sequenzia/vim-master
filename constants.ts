@@ -17,7 +17,7 @@ export const TUTORIAL_LEVELS: Level[] = [
     },
     allowedKeys: ['h', 'j', 'k', 'l'],
     hints: ['h: left', 'j: down', 'k: up', 'l: right'],
-    wizardIntro: "Welcome, initiate. I am Anthony. To wield the dark magic, you must first learn to move without the rodent (mouse). Use H, J, K, L.",
+    wizardIntro: "Welcome, initiate. I'm Anthony. To wield the dark magic, you must first learn to move without the rodent (mouse). Use H, J, K, L.",
     wizardSuccess: "Acceptable. Your fingers begin to remember."
   },
   {

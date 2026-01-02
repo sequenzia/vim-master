@@ -25,18 +25,22 @@ const Wizard: React.FC<WizardProps> = ({ message, emotion }) => {
           aria-label="View full size wizard avatar"
         >
           <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-          <img 
-            src={ANTHONY_IMAGE_URL} 
-            alt="Anthony the Vim Master" 
-            className="relative w-24 h-24 rounded-full border-2 border-purple-500 object-cover grayscale hover:grayscale-0 transition-all duration-500"
-          />
-          <div className="absolute bottom-0 right-0 bg-black text-xs text-purple-300 px-1 rounded border border-purple-500">
+          
+          <div className="relative w-24 h-24 rounded-full border-2 border-purple-500 overflow-hidden bg-gray-900">
+            <img 
+              src={ANTHONY_IMAGE_URL} 
+              alt="Anthony the Vim Master" 
+              className="w-full h-full object-cover object-top scale-150 translate-y-6 grayscale group-hover:grayscale-0 transition-all duration-500"
+            />
+          </div>
+          
+          <div className="absolute bottom-0 right-0 bg-black text-xs text-purple-300 px-1 rounded border border-purple-500 z-10">
             Lvl 99
           </div>
         </div>
         
         <div className="flex-1">
-          <h3 className="text-purple-400 font-fantasy text-lg mb-1">Anthony, The Vim Master</h3>
+          <h3 className="text-purple-400 font-fantasy text-lg mb-1">Anthony "The Vim Master"</h3>
           <div className="relative bg-gray-800 p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl border-l-4 border-purple-600">
               <p className="text-gray-300 font-mono text-sm md:text-base leading-relaxed typing-effect">
                  "{message}"
