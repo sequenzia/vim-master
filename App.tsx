@@ -1,0 +1,193 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import VimEditor from './components/VimEditor';
+import Wizard from './components/Wizard';
+import { VimMode, GameState, Level, Cursor } from './types';
+import { TUTORIAL_LEVELS } from './constants';
+import { generateInfiniteLevel, generateWizardDialogue } from './services/geminiService';
+
+const App: React.FC = () => {
+  const [gameState, setGameState] = useState<GameState>({
+    currentLevelIndex: 0,
+    isLevelComplete: false,
+    score: 0,
+    mode: VimMode.NORMAL,
+    buffer: [],
+    cursor: { row: 0, col: 0 },
+    statusMessage: "",
+    isLoading: true
+  });
+
+  const [currentLevelData, setCurrentLevelData] = useState<Level | null>(null);
+  const [wizardMessage, setWizardMessage] = useState<string>("Loading the dark arts...");
+
+  // Load level logic
+  const loadLevel = useCallback(async (index: number) => {
+    setGameState(prev => ({ ...prev, isLoading: true, isLevelComplete: false, mode: VimMode.NORMAL }));
+    
+    let level: Level;
+
+    if (index < TUTORIAL_LEVELS.length) {
+      level = TUTORIAL_LEVELS[index];
+    } else {
+      // Generate infinite level
+      const generated = await generateInfiniteLevel(index + 1, "Refactoring Necromancy Code");
+      // Merge with defaults to ensure safety
+      level = {
+        id: index + 1,
+        title: generated.title || `Level ${index + 1}`,
+        description: generated.description || "Survive.",
+        startText: generated.startText || ["Error"],
+        targetText: generated.targetText || ["Fixed"],
+        allowedKeys: generated.allowedKeys || ['h','j','k','l'],
+        hints: generated.hints || [],
+        wizardIntro: generated.wizardIntro || "Begin.",
+        wizardSuccess: generated.wizardSuccess || "Done."
+      };
+    }
+
+    setCurrentLevelData(level);
+    setGameState(prev => ({
+      ...prev,
+      currentLevelIndex: index,
+      buffer: [...level.startText],
+      cursor: { row: 0, col: 0 },
+      isLoading: false,
+      statusMessage: level.description
+    }));
+    setWizardMessage(level.wizardIntro);
+
+  }, []);
+
+  // Initialize
+  useEffect(() => {
+    loadLevel(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Check win condition
+  useEffect(() => {
+    if (!currentLevelData || gameState.isLoading || gameState.isLevelComplete) return;
+
+    let isWin = false;
+    
+    // Check if target is function or array
+    if (typeof currentLevelData.targetText === 'function') {
+      isWin = currentLevelData.targetText(gameState.buffer, gameState.cursor);
+    } else {
+      // Array comparison
+      isWin = JSON.stringify(gameState.buffer) === JSON.stringify(currentLevelData.targetText);
+    }
+
+    if (isWin) {
+      handleLevelComplete();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState.buffer, gameState.cursor]);
+
+  const handleLevelComplete = async () => {
+    setGameState(prev => ({ ...prev, isLevelComplete: true, score: prev.score + 100 }));
+    // Generate reaction or use static
+    if (currentLevelData) {
+        setWizardMessage(currentLevelData.wizardSuccess);
+        
+        // Optional: dynamic wizard flair
+        if (gameState.currentLevelIndex >= TUTORIAL_LEVELS.length) {
+             const dynamicFlair = await generateWizardDialogue("The student has completed a complex necromancy refactor.", "impressed");
+             setWizardMessage(dynamicFlair);
+        }
+    }
+  };
+
+  const nextLevel = () => {
+    loadLevel(gameState.currentLevelIndex + 1);
+  };
+
+  const resetLevel = () => {
+    if (currentLevelData) {
+      setGameState(prev => ({
+        ...prev,
+        buffer: [...currentLevelData.startText],
+        cursor: { row: 0, col: 0 },
+        mode: VimMode.NORMAL,
+        isLevelComplete: false
+      }));
+    }
+  };
+
+  if (!currentLevelData) return <div className="text-white text-center mt-20 font-mono">Summoning the Editor...</div>;
+
+  return (
+    <div className="min-h-screen bg-vim-bg text-vim-fg p-4 flex flex-col items-center justify-center relative overflow-hidden">
+      
+      {/* Background Decor */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-5">
+         <div className="absolute top-10 left-10 text-9xl font-fantasy text-purple-900">VIM</div>
+         <div className="absolute bottom-10 right-10 text-9xl font-fantasy text-purple-900">ESC</div>
+      </div>
+
+      <div className="relative z-10 w-full max-w-4xl space-y-6">
+        
+        {/* Header */}
+        <header className="text-center mb-8">
+          <h1 className="text-4xl md:text-6xl font-fantasy text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 drop-shadow-lg">
+            Dark Magic of Vim
+          </h1>
+          <p className="text-gray-500 font-mono mt-2">Level {currentLevelData.id}: {currentLevelData.title}</p>
+        </header>
+
+        {/* Main Game Area */}
+        <Wizard message={wizardMessage} emotion={gameState.isLevelComplete ? 'happy' : 'neutral'} />
+
+        <div className="relative">
+           <VimEditor 
+            lines={gameState.buffer}
+            cursor={gameState.cursor}
+            mode={gameState.mode}
+            onBufferChange={(lines) => setGameState(prev => ({ ...prev, buffer: lines }))}
+            onCursorChange={(cursor) => setGameState(prev => ({ ...prev, cursor }))}
+            onModeChange={(mode) => setGameState(prev => ({ ...prev, mode }))}
+            allowedKeys={currentLevelData.allowedKeys}
+            isLevelComplete={gameState.isLevelComplete}
+          />
+          
+          {/* Objective Overlay (Helpful Hint) */}
+          {!gameState.isLevelComplete && (
+            <div className="mt-4 bg-black/50 p-4 rounded border border-gray-700 font-mono text-sm text-gray-300">
+               <span className="text-purple-400 font-bold">OBJECTIVE:</span> {currentLevelData.description}
+            </div>
+          )}
+
+          {/* Target Preview (For comparison levels) */}
+           {!gameState.isLevelComplete && Array.isArray(currentLevelData.targetText) && (
+              <div className="mt-2 text-xs text-gray-600 font-mono">
+                  <p>Target:</p>
+                  {currentLevelData.targetText.map((l, i) => <div key={i}>{l}</div>)}
+              </div>
+           )}
+        </div>
+
+        {/* Controls / Actions */}
+        <div className="flex justify-center gap-4 mt-6">
+          <button 
+            onClick={resetLevel}
+            className="px-6 py-2 bg-gray-800 hover:bg-red-900 text-gray-300 rounded font-mono border border-gray-600 transition-colors"
+          >
+            Reset Scroll
+          </button>
+          
+          {gameState.isLevelComplete && (
+            <button 
+              onClick={nextLevel}
+              className="px-8 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded font-mono font-bold shadow-[0_0_15px_rgba(168,85,247,0.5)] animate-bounce"
+            >
+              Next Ritual →
+            </button>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default App;
