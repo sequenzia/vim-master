@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import VimEditor from './components/VimEditor';
 import Wizard from './components/Wizard';
+import ChatBot from './components/ChatBot';
 import { VimMode, GameState, Level, Cursor } from './types';
 import { TUTORIAL_LEVELS } from './constants';
 import { generateInfiniteLevel, generateWizardDialogue } from './services/geminiService';
@@ -186,6 +187,8 @@ const App: React.FC = () => {
         </div>
 
       </div>
+
+      <ChatBot />
     </div>
   );
 };

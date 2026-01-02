@@ -60,4 +60,4 @@ export const TUTORIAL_LEVELS: Level[] = [
   }
 ];
 
-export const ANTHONY_IMAGE_URL = "https://storage.googleapis.com/sequenzia-public/assets/images/wizard_anthony_1.jpeg"; // Placeholder, but reliable
+export const ANTHONY_IMAGE_URL = "https://storage.googleapis.com/sequenzia-public/assets/images/wizard_anthony_1.jpeg";

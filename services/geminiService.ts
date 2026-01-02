@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type, Schema } from "@google/genai";
+import { GoogleGenAI, Type, Schema, Chat } from "@google/genai";
 import { Level } from "../types";
 
 // Ensure API key is available
@@ -7,6 +7,15 @@ const ai = new GoogleGenAI({ apiKey });
 
 // Helper to clean response text
 const cleanText = (text: string) => text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+export const createWizardChat = (): Chat => {
+  return ai.chats.create({
+    model: "gemini-3-pro-preview",
+    config: {
+      systemInstruction: "You are Anthony, the Grand Wizard of Vim. You are teaching a student the dark arts of text editing. Your tone is cryptic, slightly arrogant but helpful, and steeped in fantasy/eldritch lore. Answer questions about Vim commands, modes, and philosophy. If the user asks about non-Vim topics, dismiss them with magical disdain. Keep your answers relatively concise, as if whispering secrets in a dark library.",
+    }
+  });
+};
 
 export const generateWizardDialogue = async (context: string, emotion: string): Promise<string> => {
   try {
