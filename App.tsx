@@ -1,12 +1,27 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import VimEditor from './components/VimEditor';
 import Wizard from './components/Wizard';
 import ChatBot from './components/ChatBot';
-import { VimMode, GameState, Level, Cursor } from './types';
-import { TUTORIAL_LEVELS } from './constants';
+import PlayerHUD from './components/PlayerHUD';
+import AchievementToast from './components/AchievementToast';
+import { VimMode, GameState, Level, PlayerProfile, Achievement } from './types';
+import { TUTORIAL_LEVELS, ACHIEVEMENTS, RANKS } from './constants';
 import { generateInfiniteLevel, generateWizardDialogue } from './services/geminiService';
 
+const DEFAULT_PROFILE: PlayerProfile = {
+  xp: 0,
+  unlockedAchievements: [],
+  levelsCompleted: 0
+};
+
 const App: React.FC = () => {
+  // Load profile from local storage if available
+  const [playerProfile, setPlayerProfile] = useState<PlayerProfile>(() => {
+    const saved = localStorage.getItem('vim_wizard_profile');
+    return saved ? JSON.parse(saved) : DEFAULT_PROFILE;
+  });
+
   const [gameState, setGameState] = useState<GameState>({
     currentLevelIndex: 0,
     isLevelComplete: false,
@@ -20,6 +35,12 @@ const App: React.FC = () => {
 
   const [currentLevelData, setCurrentLevelData] = useState<Level | null>(null);
   const [wizardMessage, setWizardMessage] = useState<string>("Loading the dark arts...");
+  const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
+
+  // Save profile whenever it changes
+  useEffect(() => {
+    localStorage.setItem('vim_wizard_profile', JSON.stringify(playerProfile));
+  }, [playerProfile]);
 
   // Load level logic
   const loadLevel = useCallback(async (index: number) => {
@@ -85,8 +106,54 @@ const App: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState.buffer, gameState.cursor]);
 
+  const unlockAchievement = (id: string, currentUnlocked: string[]) => {
+    if (!currentUnlocked.includes(id)) {
+      const ach = ACHIEVEMENTS.find(a => a.id === id);
+      if (ach) {
+        setNewAchievement(ach);
+        return true;
+      }
+    }
+    return false;
+  };
+
   const handleLevelComplete = async () => {
     setGameState(prev => ({ ...prev, isLevelComplete: true, score: prev.score + 100 }));
+    
+    // Update Profile (XP & Achievements)
+    setPlayerProfile(prev => {
+      let newXP = prev.xp + 150; // Base XP
+      const newLevelsCompleted = prev.levelsCompleted + 1;
+      const newUnlocked = [...prev.unlockedAchievements];
+
+      // Check Specific Achievement Conditions
+      if (currentLevelData?.id === 1 && unlockAchievement('first_blood', prev.unlockedAchievements)) {
+         newUnlocked.push('first_blood');
+      }
+      if (currentLevelData?.id === 2 && unlockAchievement('ghost_buster', prev.unlockedAchievements)) {
+        newUnlocked.push('ghost_buster');
+      }
+      if (currentLevelData?.id === 3 && unlockAchievement('scribe', prev.unlockedAchievements)) {
+        newUnlocked.push('scribe');
+      }
+      if (gameState.currentLevelIndex >= TUTORIAL_LEVELS.length && unlockAchievement('void_walker', prev.unlockedAchievements)) {
+        newUnlocked.push('void_walker');
+      }
+      if (newLevelsCompleted === TUTORIAL_LEVELS.length && unlockAchievement('mastery', prev.unlockedAchievements)) {
+        newUnlocked.push('mastery');
+      }
+      if (newXP >= 1000 && unlockAchievement('high_roller', prev.unlockedAchievements)) {
+        newUnlocked.push('high_roller');
+      }
+
+      return {
+        ...prev,
+        xp: newXP,
+        levelsCompleted: newLevelsCompleted,
+        unlockedAchievements: newUnlocked
+      };
+    });
+
     // Generate reaction or use static
     if (currentLevelData) {
         setWizardMessage(currentLevelData.wizardSuccess);
@@ -126,19 +193,22 @@ const App: React.FC = () => {
          <div className="absolute bottom-10 right-10 text-9xl font-fantasy text-purple-900">ESC</div>
       </div>
 
-      <div className="relative z-10 w-full max-w-4xl space-y-6">
+      <div className="relative z-10 w-full max-w-4xl space-y-4">
         
         {/* Header */}
-        <header className="text-center mb-8">
+        <header className="text-center mb-4">
           <h1 className="text-4xl md:text-6xl font-fantasy text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 drop-shadow-lg">
             Dark Magic of Vim
           </h1>
-          <p className="text-gray-500 font-mono mt-2">Level {currentLevelData.id}: {currentLevelData.title}</p>
         </header>
 
-        {/* Main Game Area */}
+        {/* Player HUD */}
+        <PlayerHUD profile={playerProfile} />
+
+        {/* Wizard */}
         <Wizard message={wizardMessage} emotion={gameState.isLevelComplete ? 'happy' : 'neutral'} />
 
+        {/* Main Game Area */}
         <div className="relative">
            <VimEditor 
             lines={gameState.buffer}
@@ -153,8 +223,11 @@ const App: React.FC = () => {
           
           {/* Objective Overlay (Helpful Hint) */}
           {!gameState.isLevelComplete && (
-            <div className="mt-4 bg-black/50 p-4 rounded border border-gray-700 font-mono text-sm text-gray-300">
-               <span className="text-purple-400 font-bold">OBJECTIVE:</span> {currentLevelData.description}
+            <div className="mt-4 bg-black/50 p-4 rounded border border-gray-700 font-mono text-sm text-gray-300 flex justify-between items-center">
+               <div>
+                 <span className="text-purple-400 font-bold">OBJECTIVE:</span> {currentLevelData.description}
+               </div>
+               <div className="text-xs text-gray-500">Level {currentLevelData.id}</div>
             </div>
           )}
 
@@ -189,6 +262,7 @@ const App: React.FC = () => {
       </div>
 
       <ChatBot />
+      <AchievementToast achievement={newAchievement} onClose={() => setNewAchievement(null)} />
     </div>
   );
 };

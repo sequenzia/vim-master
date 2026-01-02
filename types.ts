@@ -1,3 +1,4 @@
+
 export enum VimMode {
   NORMAL = 'NORMAL',
   INSERT = 'INSERT',
@@ -33,3 +34,23 @@ export interface GameState {
 }
 
 export type WizardEmotion = 'neutral' | 'happy' | 'angry' | 'casting';
+
+// Gamification Types
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+}
+
+export interface Rank {
+  title: string;
+  minXP: number;
+  color: string;
+}
+
+export interface PlayerProfile {
+  xp: number;
+  unlockedAchievements: string[];
+  levelsCompleted: number;
+}

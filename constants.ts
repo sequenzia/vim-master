@@ -1,4 +1,5 @@
-import { Level, Cursor } from './types';
+
+import { Level, Cursor, Rank, Achievement } from './types';
 
 export const TUTORIAL_LEVELS: Level[] = [
   {
@@ -61,3 +62,22 @@ export const TUTORIAL_LEVELS: Level[] = [
 ];
 
 export const ANTHONY_IMAGE_URL = "https://storage.googleapis.com/sequenzia-public/assets/images/wizard_anthony_1.jpeg";
+
+export const RANKS: Rank[] = [
+  { title: "Muggle", minXP: 0, color: "text-gray-500" },
+  { title: "First Year Student", minXP: 100, color: "text-green-400" },
+  { title: "Prefect", minXP: 300, color: "text-blue-400" },
+  { title: "Auror", minXP: 600, color: "text-red-400" },
+  { title: "Order of the Phoenix", minXP: 1000, color: "text-orange-500" },
+  { title: "Headmaster", minXP: 2000, color: "text-purple-400" },
+  { title: "Master of Death", minXP: 5000, color: "text-pink-500 drop-shadow-[0_0_10px_rgba(236,72,153,0.8)]" }
+];
+
+export const ACHIEVEMENTS: Achievement[] = [
+  { id: 'first_blood', title: 'First Blood', description: 'Complete the first level', icon: '🩸' },
+  { id: 'ghost_buster', title: 'Ghost Buster', description: 'Banish the extra characters', icon: '👻' },
+  { id: 'scribe', title: 'The Scribe', description: 'Successfully use Insert mode', icon: '📜' },
+  { id: 'void_walker', title: 'Void Walker', description: 'Complete an AI generated level', icon: '🌌' },
+  { id: 'high_roller', title: 'High Roller', description: 'Reach 1000 XP', icon: '💎' },
+  { id: 'mastery', title: 'Tutorial Complete', description: 'Finish all tutorial levels', icon: '🎓' }
+];
