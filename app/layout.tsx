@@ -15,6 +15,10 @@ const cinzel = Cinzel({
 export const metadata: Metadata = {
   title: 'The Dark Magic of Vim',
   description: 'Learn Vim through dark magic and wizardry',
+  icons: {
+    icon: 'https://storage.googleapis.com/sequenzia-public/assets/images/vim/wizard_anthony_sm.jpeg',
+    apple: 'https://storage.googleapis.com/sequenzia-public/assets/images/vim/wizard_anthony_sm.jpeg',
+  },
 };
 
 export default function RootLayout({

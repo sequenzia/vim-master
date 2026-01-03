@@ -1,32 +1,34 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { useChat } from "@ai-sdk/react";
+import { useChat, type UIMessage } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 
 const ANTHONY_AVATAR_SM =
   "https://storage.googleapis.com/sequenzia-public/assets/images/vim/wizard_anthony_sm.jpeg";
 
+const INITIAL_MESSAGES: UIMessage[] = [
+  {
+    id: "initial",
+    role: "assistant",
+    parts: [
+      {
+        type: "text",
+        text: "Speak, apprentice. What forbidden knowledge do you seek?",
+      },
+    ],
+  },
+];
+
 const ChatBot: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
 
-  const { messages, sendMessage, isLoading, error } = useChat({
+  const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
     }),
-    initialMessages: [
-      {
-        id: "initial",
-        role: "assistant",
-        parts: [
-          {
-            type: "text",
-            text: "Speak, apprentice. What forbidden knowledge do you seek?",
-          },
-        ],
-      },
-    ],
+    messages: INITIAL_MESSAGES,
     onError: (err) => console.error("Chat error:", err),
   });
 
@@ -86,7 +88,7 @@ const ChatBot: React.FC = () => {
             </div>
           );
         })}
-        {isLoading && (
+        {(status === "submitted" || status === "streaming") && (
           <div className="flex justify-start">
             <div className="bg-gray-800 p-3 rounded-lg rounded-bl-none border border-gray-700">
               <div className="flex space-x-1.5">
@@ -123,12 +125,12 @@ const ChatBot: React.FC = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Chat about Vim"
-            disabled={isLoading}
+            disabled={status !== "ready"}
             className="flex-1 bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500 transition-colors disabled:opacity-50"
           />
           <button
             type="submit"
-            disabled={isLoading || !input.trim()}
+            disabled={status !== "ready" || !input.trim()}
             className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded transition-colors disabled:opacity-50"
           >
             Send
