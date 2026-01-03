@@ -1,5 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { VimMode, Cursor } from '../types';
+'use client';
+
+import React, { useEffect, useRef } from 'react';
+import { VimMode, Cursor } from '@/types';
 
 interface VimEditorProps {
   lines: string[];
@@ -39,6 +41,14 @@ const VimEditor: React.FC<VimEditorProps> = ({
     // Mode Switching
     if (mode === VimMode.NORMAL) {
       if (key === 'i') {
+        onModeChange(VimMode.INSERT);
+        e.preventDefault();
+        return;
+      }
+      if (key === 'a') {
+        // Append: move cursor right by one, then enter insert mode
+        const lineLen = lines[cursor.row].length;
+        onCursorChange({ ...cursor, col: Math.min(cursor.col + 1, lineLen) });
         onModeChange(VimMode.INSERT);
         e.preventDefault();
         return;
@@ -199,7 +209,7 @@ const VimEditor: React.FC<VimEditorProps> = ({
             <div className="flex-1 whitespace-pre break-all relative">
               {line.length === 0 && rowIndex === cursor.row ? (
                  // Render block cursor on empty line
-                 <span className={`inline-block w-2.5 h-6 align-middle ${mode === VimMode.NORMAL ? 'bg-vim-cursor opacity-80' : 'border-l-2 border-white'}`}>&nbsp;</span>
+                 <span className={`inline-block w-2.5 h-6 align-middle ${mode === VimMode.NORMAL ? 'bg-fuchsia-400 opacity-80' : 'border-l-2 border-white'}`}>&nbsp;</span>
               ) : (
                 line.split('').map((char, colIndex) => {
                   const isCursor = rowIndex === cursor.row && colIndex === cursor.col;
@@ -207,7 +217,7 @@ const VimEditor: React.FC<VimEditorProps> = ({
                   return (
                     <span 
                       key={colIndex}
-                      className={`${isCursor && mode === VimMode.NORMAL ? 'bg-vim-cursor text-black animate-pulse-slow' : ''} ${isCursor && mode === VimMode.INSERT ? 'border-l-2 border-white' : ''}`}
+                      className={`${isCursor && mode === VimMode.NORMAL ? 'bg-fuchsia-400 text-black' : ''} ${isCursor && mode === VimMode.INSERT ? 'border-l-2 border-white' : ''}`}
                     >
                       {char}
                     </span>

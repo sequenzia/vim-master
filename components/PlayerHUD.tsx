@@ -1,6 +1,6 @@
 import React from 'react';
-import { PlayerProfile } from '../types';
-import { RANKS, ACHIEVEMENTS } from '../constants';
+import { PlayerProfile } from '@/types';
+import { RANKS, ACHIEVEMENTS } from '@/constants';
 
 interface PlayerHUDProps {
   profile: PlayerProfile;

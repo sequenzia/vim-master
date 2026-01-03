@@ -1,6 +1,8 @@
+'use client';
+
 import React, { useState } from 'react';
-import { Level } from '../types';
-import CheatSheets from './CheatSheets';
+import { Level } from '@/types';
+import CheatSheets from '@/components/CheatSheets';
 
 const ANTHONY_AVATAR_SM = 'https://storage.googleapis.com/sequenzia-public/assets/images/vim/wizard_anthony_sm.jpeg';
 const ANTHONY_AVATAR_LG = 'https://storage.googleapis.com/sequenzia-public/assets/images/vim/wizard_anthony_lg.jpeg';

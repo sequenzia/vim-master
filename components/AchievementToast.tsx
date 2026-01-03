@@ -1,6 +1,7 @@
+'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Achievement } from '../types';
+import { Achievement } from '@/types';
 
 interface AchievementToastProps {
   achievement: Achievement | null;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cursor } from '../types';
+import { Cursor } from '@/types';
 
 interface TargetPreviewProps {
   targetText: string[] | ((buffer: string[], cursor: Cursor) => boolean);

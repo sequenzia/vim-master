@@ -1,14 +1,15 @@
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import VimEditor from './components/VimEditor';
-import LeftSidebar from './components/LeftSidebar';
-import ChatBot from './components/ChatBot';
-import PlayerHUD from './components/PlayerHUD';
-import TargetPreview from './components/TargetPreview';
-import AchievementToast from './components/AchievementToast';
-import { VimMode, GameState, Level, PlayerProfile, Achievement } from './types';
-import { TUTORIAL_LEVELS, ACHIEVEMENTS } from './constants';
-import { generateInfiniteLevel, generateWizardDialogue } from './services/geminiService';
+import VimEditor from '@/components/VimEditor';
+import LeftSidebar from '@/components/LeftSidebar';
+import ChatBot from '@/components/ChatBot';
+import PlayerHUD from '@/components/PlayerHUD';
+import TargetPreview from '@/components/TargetPreview';
+import AchievementToast from '@/components/AchievementToast';
+import { VimMode, GameState, Level, PlayerProfile, Achievement } from '@/types';
+import { TUTORIAL_LEVELS, ACHIEVEMENTS } from '@/constants';
+import { generateInfiniteLevel, generateWizardDialogue } from '@/lib/gameApi';
 
 const DEFAULT_PROFILE: PlayerProfile = {
   xp: 0,
@@ -16,12 +17,10 @@ const DEFAULT_PROFILE: PlayerProfile = {
   levelsCompleted: 0
 };
 
-const App: React.FC = () => {
+export default function Page() {
   // Load profile from local storage if available
-  const [playerProfile, setPlayerProfile] = useState<PlayerProfile>(() => {
-    const saved = localStorage.getItem('vim_wizard_profile');
-    return saved ? JSON.parse(saved) : DEFAULT_PROFILE;
-  });
+  const [playerProfile, setPlayerProfile] = useState<PlayerProfile>(DEFAULT_PROFILE);
+  const [isClient, setIsClient] = useState(false);
 
   const [gameState, setGameState] = useState<GameState>({
     currentLevelIndex: 0,
@@ -38,10 +37,21 @@ const App: React.FC = () => {
   const [wizardMessage, setWizardMessage] = useState<string>("Loading the dark arts...");
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
 
+  // Initialize client-side state
+  useEffect(() => {
+    setIsClient(true);
+    const saved = localStorage.getItem('vim_wizard_profile');
+    if (saved) {
+      setPlayerProfile(JSON.parse(saved));
+    }
+  }, []);
+
   // Save profile whenever it changes
   useEffect(() => {
-    localStorage.setItem('vim_wizard_profile', JSON.stringify(playerProfile));
-  }, [playerProfile]);
+    if (isClient) {
+      localStorage.setItem('vim_wizard_profile', JSON.stringify(playerProfile));
+    }
+  }, [playerProfile, isClient]);
 
   // Load level logic
   const loadLevel = useCallback(async (index: number) => {
@@ -123,7 +133,7 @@ const App: React.FC = () => {
 
     // Update Profile (XP & Achievements)
     setPlayerProfile(prev => {
-      let newXP = prev.xp + 150; // Base XP
+      const newXP = prev.xp + 150; // Base XP
       const newLevelsCompleted = prev.levelsCompleted + 1;
       const newUnlocked = [...prev.unlockedAchievements];
 
@@ -183,6 +193,15 @@ const App: React.FC = () => {
     }
   };
 
+  const resetAllProgress = () => {
+    if (confirm("Are you sure you want to start over? All progress, XP, and achievements will be lost.")) {
+      setPlayerProfile(DEFAULT_PROFILE);
+      localStorage.removeItem('vim_wizard_profile');
+      loadLevel(0);
+      setWizardMessage("A fresh start, young apprentice. The dark arts await once more...");
+    }
+  };
+
   if (!currentLevelData) {
     return (
       <div className="h-screen bg-vim-bg flex items-center justify-center">
@@ -231,6 +250,13 @@ const App: React.FC = () => {
           {/* Controls */}
           <div className="flex justify-center gap-3 shrink-0">
             <button
+              onClick={resetAllProgress}
+              className="px-4 py-2 bg-red-900/50 hover:bg-red-800/50 text-red-300 rounded font-mono text-sm border border-red-800/50 transition-colors"
+            >
+              Start Over
+            </button>
+
+            <button
               onClick={resetLevel}
               className="px-5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded font-mono text-sm border border-gray-600 transition-colors"
             >
@@ -256,6 +282,4 @@ const App: React.FC = () => {
       <AchievementToast achievement={newAchievement} onClose={() => setNewAchievement(null)} />
     </div>
   );
-};
-
-export default App;
+}
