@@ -59,3 +59,12 @@ body {
 ::-webkit-scrollbar-thumb {
   background: #458588;
 }
+
+/* Ensure clickable elements show pointer cursor */
+button:not(:disabled),
+a,
+[role="button"],
+input[type="submit"],
+input[type="button"] {
+  cursor: pointer !important;
+}
